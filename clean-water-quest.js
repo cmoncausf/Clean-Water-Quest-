@@ -6,16 +6,30 @@ const timerDisplay = document.getElementById('timer');
 const gameOverDisplay = document.getElementById('gameOver');
 const leftBtn = document.getElementById('leftBtn');
 const rightBtn = document.getElementById('rightBtn');
+const congratsMsg = document.getElementById('congratsMsg'); // new
 
+// Level configuration: scoreToAdvance, timeLimit (seconds), spawnRate (ms), itemTypes
+const levels = [
+    { scoreToAdvance: 30, timeLimit: 65, spawnRate: 1200, itemTypes: ['💧'] }, // Easier Level 1
+    { scoreToAdvance: 120, timeLimit: 55, spawnRate: 900, itemTypes: ['💧', '🍋'] }, // Level 2: water + lemons
+    { scoreToAdvance: 160, timeLimit: 50, spawnRate: 700, itemTypes: ['💧', '🍋', '🧊'] }, // Level 3: water + lemons + ice
+    // ...add more levels as desired...
+];
+
+let currentLevel = 0;
 let score = 0;
-let timeLeft = 30; // seconds
+let timeLeft = levels[currentLevel].timeLimit;
+let timerInterval = null;
+let spawnInterval = null;
 let gameActive = true;
+let collectedItems = {}; // { '💧': 0, '🍋': 0, ... }
 let playerX = 0; // px relative to gameArea left
 let speed = 8; // how many px the player moves per step
 let spawnDelayMin = 500; // ms
 let spawnDelayMax = 1400; // ms
 let fallSpeedBase = 2.2; // base fall px per tick
 let difficultyTimer = 0;
+const SCORE_OBJECTIVE = 120; // set your win objective here
 
 // Initialize sizes after DOM renders
 function resetSizes(){
@@ -156,7 +170,20 @@ function showFeedback(el, text){
   setTimeout(()=>{ if(f.parentNode) f.remove(); }, 900);
 }
 
-function updateScore(){ scoreDisplay.textContent = `Score: ${score}`; }
+function updateScore(){ 
+  scoreDisplay.textContent = `Score: ${score}`;
+  // Check for win condition
+  if (score >= SCORE_OBJECTIVE && gameActive) {
+    showCongrats();
+    endGame(true);
+  }
+}
+
+function updateScoreboard() {
+    document.getElementById('score').textContent = `Score: ${score}`;
+    document.getElementById('timer').textContent = `Time: ${timeLeft}`;
+    document.getElementById('level').textContent = `Level: ${currentLevel + 1}`;
+}
 
 // Timer
 function startTimer(){
@@ -171,12 +198,157 @@ function startTimer(){
   }, 1000);
 }
 
-function endGame(){
-  gameActive = false;
-  gameOverDisplay.style.display = 'block';
-  gameOverDisplay.textContent = `Game Over! Final Score: ${score}`;
-  // remove remaining objects
-  document.querySelectorAll('.object').forEach(n=>n.remove());
+function startLevel(levelIdx) {
+    currentLevel = levelIdx;
+    score = 0;
+    timeLeft = levels[currentLevel].timeLimit;
+    gameActive = true;
+    collectedItems = {};
+    levels[currentLevel].itemTypes.forEach(type => collectedItems[type] = 0);
+    updateScoreboard();
+    document.getElementById('gameOver').textContent = '';
+    document.getElementById('congratsMsg').style.display = 'none';
+    // ...reset player and game area as needed...
+
+    // Remove any leftover items from previous level
+    document.querySelectorAll('.falling-item').forEach(el => el.remove());
+
+    // Start timer
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!gameActive) return;
+        timeLeft--;
+        updateScoreboard();
+        if (timeLeft <= 0) {
+            endGame(score >= levels[currentLevel].scoreToAdvance);
+        }
+    }, 1000);
+
+    // Start spawning items with difficulty
+    if (spawnInterval) clearInterval(spawnInterval);
+    spawnInterval = setInterval(spawnFallingItem, levels[currentLevel].spawnRate);
+}
+
+function showConfetti() {
+    // Simple confetti animation using emojis
+    const confettiContainer = document.createElement('div');
+    confettiContainer.style.position = 'fixed';
+    confettiContainer.style.left = 0;
+    confettiContainer.style.top = 0;
+    confettiContainer.style.width = '100vw';
+    confettiContainer.style.height = '100vh';
+    confettiContainer.style.pointerEvents = 'none';
+    confettiContainer.style.zIndex = 9999;
+    document.body.appendChild(confettiContainer);
+
+    const confettiEmojis = ['🎉', '✨', '🎊', '💦'];
+    const confettiCount = 40;
+    for (let i = 0; i < confettiCount; i++) {
+        const conf = document.createElement('div');
+        conf.textContent = confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)];
+        conf.style.position = 'absolute';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.top = '-2em';
+        conf.style.fontSize = (1.5 + Math.random() * 1.5) + 'em';
+        conf.style.transition = 'top 2.2s cubic-bezier(.23,1.02,.64,1)';
+        confettiContainer.appendChild(conf);
+        setTimeout(() => {
+            conf.style.top = (80 + Math.random() * 15) + 'vh';
+        }, 10);
+    }
+    setTimeout(() => {
+        confettiContainer.remove();
+    }, 2400);
+}
+
+function endGame(success) {
+    gameActive = false;
+    clearInterval(timerInterval);
+    clearInterval(spawnInterval);
+
+    // Show item summary
+    let summary = Object.entries(collectedItems)
+        .map(([item, count]) => `${item} x${count}`)
+        .join('  ');
+    let summaryMsg = `Items collected: ${summary}`;
+
+    if (success) {
+        showConfetti();
+        document.getElementById('gameOver').textContent = '';
+        document.getElementById('congratsMsg').innerHTML =
+            `🎉 Level ${currentLevel + 1} Complete!<br>${summaryMsg}<br>Get ready for Level ${currentLevel + 2}!`;
+        document.getElementById('congratsMsg').style.display = 'block';
+        setTimeout(() => {
+            document.getElementById('congratsMsg').style.display = 'none';
+            if (currentLevel + 1 < levels.length) {
+                startLevel(currentLevel + 1);
+            } else {
+                document.getElementById('gameOver').textContent =
+                    `🏆 Congratulations! You completed all levels!<br>${summaryMsg}`;
+            }
+        }, 3500);
+    } else {
+        document.getElementById('gameOver').innerHTML =
+            `⏰ Time's up!<br>${summaryMsg}<br>Try again!`;
+    }
+}
+
+// Spawn a random item from current level's itemTypes
+function spawnFallingItem() {
+    if (!gameActive) return;
+    const gameArea = document.getElementById('gameArea');
+    const itemTypes = levels[currentLevel].itemTypes;
+    const item = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+    const el = document.createElement('div');
+    el.className = 'falling-item';
+    el.textContent = item;
+    el.style.position = 'absolute';
+    el.style.left = Math.random() * (gameArea.offsetWidth - 32) + 'px';
+    el.style.top = '0px';
+    gameArea.appendChild(el);
+
+    // Animate falling
+    let top = 0;
+    const fallSpeed = 2 + currentLevel; // Increase speed per level
+    const fallInterval = setInterval(() => {
+        if (!gameActive) {
+            el.remove();
+            clearInterval(fallInterval);
+            return;
+        }
+        top += fallSpeed;
+        el.style.top = top + 'px';
+        // Collision with player
+        const player = document.getElementById('player');
+        const playerRect = player.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        if (
+            elRect.bottom > playerRect.top &&
+            elRect.left < playerRect.right &&
+            elRect.right > playerRect.left &&
+            elRect.top < playerRect.bottom
+        ) {
+            onScorePoint(item);
+            el.remove();
+            clearInterval(fallInterval);
+        }
+        // Remove if off screen
+        if (top > gameArea.offsetHeight) {
+            el.remove();
+            clearInterval(fallInterval);
+        }
+    }, 16);
+}
+
+// Call this when player collects an item
+function onScorePoint(item) {
+    if (!gameActive) return;
+    score++;
+    if (collectedItems[item] !== undefined) collectedItems[item]++;
+    updateScoreboard();
+    if (score >= levels[currentLevel].scoreToAdvance) {
+        endGame(true);
+    }
 }
 
 // start
@@ -209,7 +381,10 @@ gameArea.addEventListener('dblclick',()=>{
   if(gameActive) return;
   // reset state
   score=0; timeLeft=30; gameActive=true; difficultyTimer=0; spawnDelayMin=500; spawnDelayMax=1400; fallSpeedBase=2.2;
-  updateScore(); timerDisplay.textContent = `Time: ${timeLeft}`; gameOverDisplay.style.display='none'; resetSizes(); spawnLoop(); startTimer();
+  updateScore(); timerDisplay.textContent = `Time: ${timeLeft}`; gameOverDisplay.style.display='none'; congratsMsg.style.display='none'; resetSizes(); spawnLoop(); startTimer();
+  // Remove confetti if present
+  let old = document.getElementById('confetti');
+  if (old) old.remove();
 });
 
 // Reset button functionality
@@ -218,6 +393,19 @@ resetBtn.setAttribute('tabindex', '-1');
 resetBtn.addEventListener('click', () => {
   // reset state
   score=0; timeLeft=30; gameActive=true; difficultyTimer=0; spawnDelayMin=500; spawnDelayMax=1400; fallSpeedBase=2.2;
-  updateScore(); timerDisplay.textContent = `Time: ${timeLeft}`; gameOverDisplay.style.display='none'; resetSizes(); spawnLoop(); startTimer();
+  updateScore(); timerDisplay.textContent = `Time: ${timeLeft}`; gameOverDisplay.style.display='none'; congratsMsg.style.display='none'; resetSizes(); spawnLoop(); startTimer();
+  // Remove confetti if present
+  let old = document.getElementById('confetti');
+  if (old) old.remove();
   resetBtn.blur();
 });
+
+// Reset button handler
+document.getElementById('resetBtn').onclick = function() {
+    startLevel(0);
+};
+
+// On page load, start the first level
+window.onload = function() {
+    startLevel(0);
+};

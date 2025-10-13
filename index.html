@@ -8,29 +8,31 @@
 </head>
 <body>
   <header>
-    <img src="charity_water-converted.png" alt="charity: water logo" id="cw-logo" />
-    <h1>Clean Water Quest</h1>
-    <div class="scoreboard">
-      <span id="score">Score: 0</span>
-      <span style="margin-left:12px" id="timer">Time: 30</span>
-    </div>
-  </header>
-
-  <main>
-    <div id="gameArea" aria-label="Game area">
-      <div class="player" id="player">🪣</div>
-      <div class="ground"></div>
-
-      <!-- touch controls -->
-      <div class="controls" id="controls">
-        <button class="btn" id="leftBtn">◀</button>
-        <button class="btn" id="rightBtn">▶</button>
-      </div>
-    </div>
-
-    <div id="gameOver" role="status" aria-live="polite"></div>
-    <button id="resetBtn" class="btn" style="margin-top:18px;">🔄 Reset</button>
-  </main>
-<script src="clean-water-quest.js"></script>
-</body>
-</html>
+      <img src="charity_water-converted.png" alt="charity: water logo" id="cw-logo" />
+          <h1>Clean Water Quest</h1>
+              <div class="scoreboard">
+                    <span id="score">Score: 0</span>
+                          <span style="margin-left:12px" id="timer">Time: 30</span>
+                              <span style="margin-left:12px" id="level">Level: 1</span>
+                                </div>
+                                </header>
+                                
+                                  <main>
+                                      <div id="gameArea" aria-label="Game area">
+                                            <div class="player" id="player">🪣</div>
+                                                  <div class="ground"></div>
+                                                      </div>
+                                                      
+                                                          <!-- Move controls below gameArea, not inside -->
+                                                              <div class="controls" id="controls">
+                                                                    <button class="btn" id="leftBtn">◀</button>
+                                                                          <button class="btn" id="rightBtn">▶</button>
+                                                                              </div>
+                                                                              
+                                                                                  <div id="gameOver" role="status" aria-live="polite"></div>
+                                                                                  <div id="congratsMsg" role="status" aria-live="polite" style="display:none;font-size:1.2em;font-weight:bold;color:green;text-align:center;margin-top:10px;"></div>
+                                                                                      <button id="resetBtn" class="btn" style="margin-top:18px;">🔄 Reset</button>
+                                                                                        </main>
+                                                                                        <script src="clean-water-quest.js"></script>
+                                                                                        </body>
+                                                                                        </html>
