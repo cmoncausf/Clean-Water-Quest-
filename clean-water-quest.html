@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Clean Water Quest</title>
+<link rel="stylesheet" href="clean-water-quest.css">
+</head>
+<body>
+  <header>
+    <img src="charity_water-converted.png" alt="charity: water logo" id="cw-logo" />
+    <h1>Clean Water Quest</h1>
+    <div class="scoreboard">
+      <span id="score">Score: 0</span>
+      <span style="margin-left:12px" id="timer">Time: 30</span>
+    </div>
+  </header>
+
+  <main>
+    <div id="gameArea" aria-label="Game area">
+      <div class="player" id="player">🪣</div>
+      <div class="ground"></div>
+
+      <!-- touch controls -->
+      <div class="controls" id="controls">
+        <button class="btn" id="leftBtn">◀</button>
+        <button class="btn" id="rightBtn">▶</button>
+      </div>
+    </div>
+
+    <div id="gameOver" role="status" aria-live="polite"></div>
+    <button id="resetBtn" class="btn" style="margin-top:18px;">🔄 Reset</button>
+  </main>
+<script src="clean-water-quest.js"></script>
+</body>
+</html>

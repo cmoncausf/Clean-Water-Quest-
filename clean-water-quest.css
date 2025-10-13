@@ -1,0 +1,212 @@
+:root{
+  --cw-yellow: #ffd600;
+  --bg1:#fffbe6;
+  --bg2:#ffe066;
+  --accent: var(--cw-yellow);
+  --danger:#ff6b6b;
+  --success:#7be495;
+}
+html,body{height:100%;}
+body {
+  background: linear-gradient(180deg,var(--bg1),var(--bg2));
+  color: #222;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  padding:12px 18px 0 18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap: 4px;
+}
+#cw-logo {
+  width: 72px;
+  height: auto;
+  margin-bottom: 2px;
+  margin-top: 6px;
+  display: block;
+}
+h1{
+  margin:0;
+  font-size:1.4rem;
+  color:var(--cw-yellow);
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-shadow: 0 2px 8px #fffbe6cc;
+}
+.scoreboard{
+  font-size:1rem;
+  color: #222;
+  background: rgba(255, 214, 0, 0.08);
+  border-radius: 8px;
+  padding: 2px 12px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+#gameArea {
+  position: relative;
+  width: min(960px, 96%);
+  height: 520px;
+  margin: 12px auto;
+  overflow: hidden;
+  background: linear-gradient(to top,#ffe066,#fffbe6 80%);
+  border-radius:12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.10) inset, 0 10px 30px rgba(0,0,0,0.08);
+  max-width: 100vw;
+}
+
+.ground{
+  position:absolute; left:0; right:0; bottom:0; height:90px;
+  background:linear-gradient(#ffe066,#ffd600 80%);
+  box-shadow:0 -8px 18px rgba(0,0,0,0.08) inset;
+}
+
+.player {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 3.2rem;
+  transition: left 0.06s linear;
+  pointer-events:none;
+  z-index: 5;
+  filter: drop-shadow(0 6px 6px #ffd60044);
+}
+.object {
+  position: absolute;
+  top: -40px;
+  font-size: 2.2rem;
+  user-select: none;
+  pointer-events: auto;
+  transition: transform 0.06s linear;
+  z-index: 4;
+  text-shadow:0 3px 3px #fffbe6cc;
+}
+
+/* small HUD */
+#gameOver{
+  display:none;
+  padding:12px;
+  color:var(--danger);
+  font-weight:bold;
+  background: #fffbe6cc;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+/* on-screen controls for touch */
+.controls{
+  position: absolute;
+  left:14px;
+  bottom:18px;
+  display:flex;
+  gap:8px;
+  z-index:10;
+  width: calc(100% - 28px);
+  justify-content: center;
+  pointer-events: none;
+}
+.btn{
+  width:72px;
+  height:72px;
+  border-radius:10px;
+  background:rgba(255,214,0,0.10);
+  backdrop-filter: blur(4px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2rem;
+  border:2px solid var(--cw-yellow);
+  color: #222;
+  pointer-events: auto;
+  font-weight: 700;
+  box-shadow: 0 2px 8px #ffd60022;
+}
+.btn:active{
+  background:rgba(255,214,0,0.22);
+  color: var(--success);
+}
+
+/* Reset button centering and style */
+#resetBtn {
+  display: block;
+  margin: 24px auto 0 auto;
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: rgba(255,214,0,0.18);
+  color: #222;
+  border: 2px solid var(--cw-yellow);
+  border-radius: 10px;
+  padding: 12px 32px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px #ffd60022;
+  max-width: 240px;
+  width: 80%;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+#resetBtn:active {
+  background: rgba(255,214,0,0.32);
+  color: var(--success);
+}
+@media (max-width:600px){
+  header {
+    gap: 2px;
+    padding: 8px 4px 0 4px;
+  }
+  #cw-logo {
+    width: 48px;
+    margin-top: 2px;
+  }
+  h1 {
+    font-size: 1.1rem;
+  }
+  .scoreboard {
+    font-size: 0.95rem;
+    padding: 2px 8px;
+  }
+  #gameArea {
+    height: 60vw;
+    min-height: 320px;
+    max-height: 80vh;
+    margin: 8px auto;
+  }
+  .player{font-size:2.6rem}
+  .object{font-size:1.8rem}
+  .btn{width:58px;height:58px;font-size:1.6rem}
+  .controls{
+    left: 0;
+    bottom: 8px;
+    width: 100%;
+    gap: 12px;
+    padding: 0 4px;
+  }
+  #gameOver {
+    font-size: 1.1rem;
+    padding: 8px;
+  }
+  #resetBtn {
+    font-size: 1rem;
+    padding: 10px 18px;
+    margin-top: 16px;
+    max-width: 180px;
+    width: 90%;
+  }
+}
+
+/* Extra: prevent controls from overlapping the player on very small screens */
+@media (max-width:400px) {
+  #gameArea {
+    height: 54vw;
+    min-height: 220px;
+  }
+  .player { font-size: 2.1rem; }
+  .object { font-size: 1.2rem; }
+  .btn { width: 40px; height: 40px; font-size: 1.1rem; }
+}
