@@ -31,6 +31,21 @@ let fallSpeedBase = 2.2; // base fall px per tick
 let difficultyTimer = 0;
 const SCORE_OBJECTIVE = 120; // set your win objective here
 
+// Difficulty settings
+const difficulties = {
+  Easy:   { timeMultiplier: 1.3, scoreMultiplier: 0.7 },
+  Normal: { timeMultiplier: 1.0, scoreMultiplier: 1.0 },
+  Hard:   { timeMultiplier: 0.7, scoreMultiplier: 1.3 }
+};
+let currentDifficulty = 'Normal';
+
+// Audio
+const audioCollect = new Audio('177156__abstudios__water-drop.mp3');
+const audioFail = new Audio('181353__unfa__fail-jingle-layer-2.mp3');
+const audioWin = new Audio('397434__foolboymedia__crowd-cheer.wav');
+const audioBomb = new Audio('mixkit-8-bit-bomb-explosion-2811.wav');
+const audioCoin = new Audio('347174__davidsraba__coin-pickup-sound-v-0.wav');
+
 // Initialize sizes after DOM renders
 function resetSizes(){
   const areaRect = gameArea.getBoundingClientRect();
@@ -116,46 +131,52 @@ function spawnObject(){
   el.dataset.type = obj.type;
   el.dataset.points = obj.points;
 
-  // Make droplets bigger and ensure clickable
-  el.style.fontSize = '3.2rem'; // Increased size
-  el.style.cursor = 'pointer'; // Show pointer cursor
-  el.style.pointerEvents = 'auto'; // Ensure clickable
+  el.style.fontSize = '3.2rem';
+  el.style.cursor = 'pointer';
+  el.style.pointerEvents = 'auto';
 
   const areaRect = gameArea.getBoundingClientRect();
-  const x = Math.random() * (areaRect.width - 60) + 12; // padding
+  const x = Math.random() * (areaRect.width - 60) + 12;
   el.style.left = x + 'px';
   el.style.top = '-48px';
 
   gameArea.appendChild(el);
 
-  // animate fall with interval for collision checks
-  let fallSpeed = fallSpeedBase + Math.random() * 1.8; // px per tick
-  const tick = 20; // ms
+  let fallSpeed = fallSpeedBase + Math.random() * 1.8;
+  const tick = 20;
   const fallTimer = setInterval(()=>{
     if(!gameActive){ clearInterval(fallTimer); if(el.parentNode) el.remove(); return; }
     const top = parseFloat(el.style.top) || 0;
     el.style.top = (top + fallSpeed) + 'px';
 
-    // simple collision box between player and object
     const pRect = player.getBoundingClientRect();
     const oRect = el.getBoundingClientRect();
 
     if(oRect.bottom >= pRect.top && oRect.left < pRect.right && oRect.right > pRect.left){
-      // caught
       const pts = parseInt(el.dataset.points,10) || 0;
       score += pts;
-      // add brief feedback
       showFeedback(el, (pts>0?`+${pts}`:`${pts}`));
       updateScore();
+      // Play correct sound
+      if (el.dataset.type === 'bomb') {
+        audioBomb.currentTime = 0; audioBomb.play();
+      } else if (el.dataset.type === 'coin') {
+        audioCoin.currentTime = 0; audioCoin.play();
+      } else {
+        audioCollect.currentTime = 0; audioCollect.play();
+      }
       clearInterval(fallTimer);
       el.remove();
       return;
     }
 
-    // remove if passed bottom
     if(top > areaRect.height){
       clearInterval(fallTimer);
       if(el.parentNode) el.remove();
+      // Only play fail sound if game is still active
+      if (gameActive) {
+        audioFail.currentTime = 0; audioFail.play();
+      }
     }
   }, tick);
 }
@@ -175,8 +196,54 @@ function showFeedback(el, text){
   setTimeout(()=>{ if(f.parentNode) f.remove(); }, 900);
 }
 
+// Milestone messages
+const milestones = [
+  { score: 10, msg: "💧 First Drop! Keep going!" },
+  { score: 30, msg: "🌱 Water for a sprout! Nice!" },
+  { score: 60, msg: "🚰 Clean water for a family!" },
+  { score: 100, msg: "🏞️ Water for a whole village!" },
+  { score: 150, msg: "🎉 You're a water hero!" }
+];
+let shownMilestones = new Set();
+
+function showMilestone(msg) {
+  let milestoneDiv = document.getElementById('milestoneMsg');
+  if (!milestoneDiv) {
+    milestoneDiv = document.createElement('div');
+    milestoneDiv.id = 'milestoneMsg';
+    milestoneDiv.style.position = 'fixed';
+    milestoneDiv.style.top = '18%';
+    milestoneDiv.style.left = '50%';
+    milestoneDiv.style.transform = 'translateX(-50%)';
+    milestoneDiv.style.background = '#fffbe6';
+    milestoneDiv.style.color = '#222';
+    milestoneDiv.style.fontSize = '1.4em';
+    milestoneDiv.style.fontWeight = '700';
+    milestoneDiv.style.padding = '18px 32px';
+    milestoneDiv.style.borderRadius = '16px';
+    milestoneDiv.style.boxShadow = '0 4px 24px #ffd60055';
+    milestoneDiv.style.zIndex = '9999';
+    milestoneDiv.style.display = 'block';
+    document.body.appendChild(milestoneDiv);
+  }
+  milestoneDiv.textContent = msg;
+  milestoneDiv.style.opacity = '1';
+  milestoneDiv.style.display = 'block';
+  setTimeout(() => {
+    milestoneDiv.style.opacity = '0';
+    setTimeout(() => { milestoneDiv.style.display = 'none'; }, 600);
+  }, 1800);
+}
+
 function updateScore(){ 
   scoreDisplay.textContent = `Score: ${score}`;
+  // Milestone check
+  milestones.forEach(m => {
+    if (score >= m.score && !shownMilestones.has(m.score)) {
+      showMilestone(m.msg);
+      shownMilestones.add(m.score);
+    }
+  });
   // Check for win condition
   if (score >= SCORE_OBJECTIVE && gameActive) {
     showCongrats();
@@ -188,6 +255,15 @@ function updateScoreboard() {
     document.getElementById('score').textContent = `Score: ${score}`;
     document.getElementById('timer').textContent = `Time: ${timeLeft}`;
     document.getElementById('level').textContent = `Level: ${currentLevel + 1}`;
+    // Show difficulty
+    let diffLabel = document.getElementById('difficultyLabel');
+    if (!diffLabel) {
+      diffLabel = document.createElement('span');
+      diffLabel.id = 'difficultyLabel';
+      diffLabel.style.marginLeft = '12px';
+      document.querySelector('.scoreboard').appendChild(diffLabel);
+    }
+    diffLabel.textContent = `Difficulty: ${currentDifficulty}`;
 }
 
 // Timer
@@ -205,10 +281,14 @@ function startTimer(){
 
 function startLevel(levelIdx) {
     currentLevel = levelIdx;
+    // Apply difficulty modifiers
+    const diff = difficulties[currentDifficulty];
     score = 0;
-    timeLeft = levels[currentLevel].timeLimit;
+    timeLeft = Math.round(levels[currentLevel].timeLimit * diff.timeMultiplier);
     gameActive = true;
     collectedItems = {};
+    // Adjust score required to win for this level
+    levels[currentLevel].scoreToAdvanceAdjusted = Math.round(levels[currentLevel].scoreToAdvance * diff.scoreMultiplier);
     levels[currentLevel].itemTypes.forEach(type => collectedItems[type] = 0);
     updateScoreboard();
     document.getElementById('gameOver').textContent = '';
@@ -225,7 +305,7 @@ function startLevel(levelIdx) {
         timeLeft--;
         updateScoreboard();
         if (timeLeft <= 0) {
-            endGame(score >= levels[currentLevel].scoreToAdvance);
+            endGame(score >= levels[currentLevel].scoreToAdvanceAdjusted);
         }
     }, 1000);
 
@@ -278,7 +358,13 @@ function endGame(success) {
     let summaryMsg = `Items collected: ${summary}`;
 
     if (success) {
-        showConfetti();
+        // Play win sound and stop after 1.2 seconds
+        audioWin.currentTime = 0; audioWin.play();
+        setTimeout(() => {
+            audioWin.pause();
+            audioWin.currentTime = 0;
+        }, 1200);
+
         document.getElementById('gameOver').textContent = '';
         document.getElementById('congratsMsg').innerHTML =
             `🎉 Level ${currentLevel + 1} Complete!<br>${summaryMsg}<br>Get ready for Level ${currentLevel + 2}!`;
@@ -289,12 +375,14 @@ function endGame(success) {
                 startLevel(currentLevel + 1);
             } else {
                 document.getElementById('gameOver').textContent =
-                    `🏆 Congratulations! You completed all levels!<br>${summaryMsg}`;
+                    `🏆 Congratulations! You completed all levels on ${currentDifficulty} mode!<br>${summaryMsg}`;
             }
         }, 3500);
     } else {
         document.getElementById('gameOver').innerHTML =
             `⏰ Time's up!<br>${summaryMsg}<br>Try again!`;
+        // Play fail sound
+        audioFail.currentTime = 0; audioFail.play();
     }
 }
 
@@ -311,16 +399,14 @@ function spawnFallingItem() {
     el.style.left = Math.random() * (gameArea.offsetWidth - 32) + 'px';
     el.style.top = '0px';
 
-    // Make falling items bigger and clickable
     el.style.fontSize = '3.2rem';
     el.style.cursor = 'pointer';
     el.style.pointerEvents = 'auto';
 
     gameArea.appendChild(el);
 
-    // Animate falling
     let top = 0;
-    const fallSpeed = 2 + currentLevel; // Increase speed per level
+    const fallSpeed = 2 + currentLevel;
     const fallInterval = setInterval(() => {
         if (!gameActive) {
             el.remove();
@@ -329,7 +415,6 @@ function spawnFallingItem() {
         }
         top += fallSpeed;
         el.style.top = top + 'px';
-        // Collision with player
         const player = document.getElementById('player');
         const playerRect = player.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
@@ -340,13 +425,18 @@ function spawnFallingItem() {
             elRect.top < playerRect.bottom
         ) {
             onScorePoint(item);
+            // Play collect sound
+            audioCollect.currentTime = 0; audioCollect.play();
             el.remove();
             clearInterval(fallInterval);
         }
-        // Remove if off screen
         if (top > gameArea.offsetHeight) {
             el.remove();
             clearInterval(fallInterval);
+            // Only play fail sound if game is still active
+            if (gameActive) {
+              audioFail.currentTime = 0; audioFail.play();
+            }
         }
     }, 16);
 }
@@ -379,14 +469,28 @@ gameArea.addEventListener('click',(ev)=>{
   if(!gameActive) return;
   const target = ev.target;
   if(target.classList && (target.classList.contains('object') || target.classList.contains('falling-item'))){
-    // For .object, use points; for .falling-item, just increment score
+    // Move bucket under clicked object before collecting
+    const areaRect = gameArea.getBoundingClientRect();
+    const objRect = target.getBoundingClientRect();
+    playerX = Math.max(6, Math.min(areaRect.width - player.offsetWidth - 6, objRect.left - areaRect.left + (objRect.width/2) - (player.offsetWidth/2)));
+    player.style.left = playerX + 'px';
+
     if(target.classList.contains('object')){
       const pts = parseInt(target.dataset.points,10)||0;
       score += pts;
       showFeedback(target, (pts>0?`+${pts}`:`${pts}`));
       updateScore();
+      // Play correct sound
+      if (target.dataset.type === 'bomb') {
+        audioBomb.currentTime = 0; audioBomb.play();
+      } else if (target.dataset.type === 'coin') {
+        audioCoin.currentTime = 0; audioCoin.play();
+      } else {
+        audioCollect.currentTime = 0; audioCollect.play();
+      }
     } else if(target.classList.contains('falling-item')) {
       onScorePoint(target.textContent);
+      audioCollect.currentTime = 0; audioCollect.play();
     }
     target.remove();
   }
@@ -421,7 +525,31 @@ document.getElementById('resetBtn').onclick = function() {
     startLevel(0);
 };
 
+// Add difficulty selector to UI
+function addDifficultySelector() {
+  if (document.getElementById('difficultySelector')) return;
+  const header = document.querySelector('header');
+  const selector = document.createElement('select');
+  selector.id = 'difficultySelector';
+  selector.style.margin = '8px 0';
+  ['Easy','Normal','Hard'].forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    selector.appendChild(opt);
+  });
+  selector.value = currentDifficulty;
+  selector.onchange = function() {
+    currentDifficulty = selector.value;
+    startLevel(0);
+  };
+  header.appendChild(selector);
+}
+addDifficultySelector();
+
 // On page load, start the first level
 window.onload = function() {
+    addDifficultySelector();
     startLevel(0);
+    updatePurityBar();
 };

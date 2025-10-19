@@ -10,7 +10,7 @@ html,body{height:100%;}
 body {
   background: linear-gradient(180deg,var(--bg1),var(--bg2));
   color: #222;
-  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-family: 'Montserrat', Arial, sans-serif;
   text-align: center;
   margin: 0;
   -webkit-font-smoothing:antialiased;
@@ -165,6 +165,36 @@ h1{
   background: rgba(255,214,0,0.32);
   color: var(--success);
 }
+
+/* Purity bar styles */
+#purityBarContainer {
+  width: 220px;
+  height: 28px;
+  background: #fffbe6;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px #ffd60022;
+  margin: 10px auto 0 auto;
+  position: relative;
+}
+#purityBar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,#7be495 0%,#ffd600 100%);
+  border-radius: 14px;
+  transition: width 0.3s;
+}
+#purityLabel {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #222;
+  pointer-events: none;
+  font-size: 1.05em;
+}
+
 @media (max-width:600px){
   header {
     gap: 2px;
@@ -219,4 +249,26 @@ h1{
   .player { font-size: 2.1rem; }
   .object { font-size: 1.2rem; }
   .btn { width: 40px; height: 40px; font-size: 1.1rem; }
+}
+
+/* Level backgrounds */
+.bg-dry {
+  background: linear-gradient(180deg, #f7e9c4 0%, #e2c99a 100%);
+  /* cracked earth pattern using SVG */
+  background-image: url("data:image/svg+xml;utf8,<svg width='100' height='100' xmlns='http://www.w3.org/2000/svg'><path d='M0,50 Q25,60 50,50 T100,50' stroke='%23bfa76a' stroke-width='2' fill='none'/><path d='M50,0 Q60,25 50,50 T50,100' stroke='%23bfa76a' stroke-width='2' fill='none'/></svg>");
+  background-repeat: repeat;
+}
+
+.bg-sprout {
+  background: linear-gradient(180deg, #e2ffd9 0%, #b6e7a6 100%);
+  /* simple sprout pattern using SVG */
+  background-image: url("data:image/svg+xml;utf8,<svg width='60' height='60' xmlns='http://www.w3.org/2000/svg'><ellipse cx='30' cy='50' rx='8' ry='18' fill='%239be07d'/><ellipse cx='20' cy='30' rx='6' ry='12' fill='%239be07d' transform='rotate(-30 20 30)'/><ellipse cx='40' cy='30' rx='6' ry='12' fill='%239be07d' transform='rotate(30 40 30)'/></svg>");
+  background-repeat: repeat;
+}
+
+.bg-water {
+  background: linear-gradient(180deg, #c2f0ff 0%, #7be4ff 100%);
+  /* flowing river pattern using SVG */
+  background-image: url("data:image/svg+xml;utf8,<svg width='120' height='60' xmlns='http://www.w3.org/2000/svg'><path d='M0,30 Q30,10 60,30 T120,30' stroke='%2366d9ff' stroke-width='6' fill='none'/></svg>");
+  background-repeat: repeat;
 }
