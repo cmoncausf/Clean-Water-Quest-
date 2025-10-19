@@ -116,6 +116,11 @@ function spawnObject(){
   el.dataset.type = obj.type;
   el.dataset.points = obj.points;
 
+  // Make droplets bigger and ensure clickable
+  el.style.fontSize = '3.2rem'; // Increased size
+  el.style.cursor = 'pointer'; // Show pointer cursor
+  el.style.pointerEvents = 'auto'; // Ensure clickable
+
   const areaRect = gameArea.getBoundingClientRect();
   const x = Math.random() * (areaRect.width - 60) + 12; // padding
   el.style.left = x + 'px';
@@ -305,6 +310,12 @@ function spawnFallingItem() {
     el.style.position = 'absolute';
     el.style.left = Math.random() * (gameArea.offsetWidth - 32) + 'px';
     el.style.top = '0px';
+
+    // Make falling items bigger and clickable
+    el.style.fontSize = '3.2rem';
+    el.style.cursor = 'pointer';
+    el.style.pointerEvents = 'auto';
+
     gameArea.appendChild(el);
 
     // Animate falling
@@ -367,11 +378,16 @@ requestAnimationFrame(gameLoop);
 gameArea.addEventListener('click',(ev)=>{
   if(!gameActive) return;
   const target = ev.target;
-  if(target.classList && target.classList.contains('object')){
-    const pts = parseInt(target.dataset.points,10)||0;
-    score += pts;
-    showFeedback(target, (pts>0?`+${pts}`:`${pts}`));
-    updateScore();
+  if(target.classList && (target.classList.contains('object') || target.classList.contains('falling-item'))){
+    // For .object, use points; for .falling-item, just increment score
+    if(target.classList.contains('object')){
+      const pts = parseInt(target.dataset.points,10)||0;
+      score += pts;
+      showFeedback(target, (pts>0?`+${pts}`:`${pts}`));
+      updateScore();
+    } else if(target.classList.contains('falling-item')) {
+      onScorePoint(target.textContent);
+    }
     target.remove();
   }
 });

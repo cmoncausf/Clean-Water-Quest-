@@ -80,10 +80,20 @@ h1{
 .object {
   position: absolute;
   top: -40px;
-  font-size: 2.2rem;
+  font-size: 3.2rem; /* Increased from 2.2rem */
+  user-select: none;
+  pointer-events: auto; /* Ensure clickable */
+  cursor: pointer;      /* Show pointer cursor */
+  transition: transform 0.06s linear;
+  z-index: 4;
+  text-shadow:0 3px 3px #fffbe6cc;
+}
+.falling-item {
+  position: absolute;
+  font-size: 3.2rem;
   user-select: none;
   pointer-events: auto;
-  transition: transform 0.06s linear;
+  cursor: pointer;
   z-index: 4;
   text-shadow:0 3px 3px #fffbe6cc;
 }
