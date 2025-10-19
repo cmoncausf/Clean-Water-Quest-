@@ -249,6 +249,15 @@ function updateScore(){
     showCongrats();
     endGame(true);
   }
+  updatePurityBar();
+}
+
+function updatePurityBar() {
+  // Example: purity is percent of SCORE_OBJECTIVE, clamped 0-100
+  const purityBar = document.getElementById('purityBar');
+  let percent = Math.max(0, Math.min(100, Math.round((score / SCORE_OBJECTIVE) * 100)));
+  purityBar.style.width = percent + '%';
+  purityBar.style.background = percent > 70 ? '#009688' : percent > 40 ? '#ffd600' : '#e53935';
 }
 
 function updateScoreboard() {
@@ -476,6 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
       spawnLoop();
       startTimer();
       startLevel(0);
+      updatePurityBar();
       gameInitialized = true;
     }
   });
