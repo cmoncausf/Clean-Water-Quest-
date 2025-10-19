@@ -476,7 +476,6 @@ document.addEventListener('DOMContentLoaded', function() {
       spawnLoop();
       startTimer();
       startLevel(0);
-      if (typeof updatePurityBar === 'function') updatePurityBar();
       gameInitialized = true;
     }
   });
