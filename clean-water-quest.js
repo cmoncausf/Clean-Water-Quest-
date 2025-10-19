@@ -351,11 +351,12 @@ function endGame(success) {
     clearInterval(timerInterval);
     clearInterval(spawnInterval);
 
-    // Show item summary
-    let summary = Object.entries(collectedItems)
-        .map(([item, count]) => `${item} x${count}`)
-        .join('  ');
-    let summaryMsg = `Items collected: ${summary}`;
+    // Show item summary using a loop
+    let summaryArr = [];
+    for (let item in collectedItems) {
+        summaryArr.push(`${item} x${collectedItems[item]}`);
+    }
+    let summaryMsg = `Items collected: ${summaryArr.join('  ')}`;
 
     if (success) {
         // Play win sound and stop after 1.2 seconds
@@ -452,10 +453,40 @@ function onScorePoint(item) {
     }
 }
 
-// start
-resetSizes();
-spawnLoop();
-startTimer();
+// --- Start Screen Logic ---
+document.addEventListener('DOMContentLoaded', function() {
+  const startScreen = document.getElementById('startScreen');
+  const startBtn = document.getElementById('startBtn');
+
+  // Hide main UI until game starts
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('main').style.display = 'none';
+  document.querySelector('footer').style.display = 'none';
+
+  let gameInitialized = false;
+
+  startBtn.addEventListener('click', () => {
+    startScreen.style.display = 'none';
+    document.querySelector('header').style.display = '';
+    document.querySelector('main').style.display = '';
+    document.querySelector('footer').style.display = '';
+    if (!gameInitialized) {
+      addDifficultySelector();
+      resetSizes();
+      spawnLoop();
+      startTimer();
+      startLevel(0);
+      if (typeof updatePurityBar === 'function') updatePurityBar();
+      gameInitialized = true;
+    }
+  });
+
+  // Show start screen on load
+  startScreen.style.display = 'flex';
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('main').style.display = 'none';
+  document.querySelector('footer').style.display = 'none';
+});
 
 // tiny game loop for continuous subtle movement
 function gameLoop(){
@@ -547,9 +578,7 @@ function addDifficultySelector() {
 }
 addDifficultySelector();
 
-// On page load, start the first level
+// On page load, show the start screen only
 window.onload = function() {
     addDifficultySelector();
-    startLevel(0);
-    updatePurityBar();
 };
